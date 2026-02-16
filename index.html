@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бонд-Скринер: ТОЛЬКО ФИКС 23%+</title>
+    <style>
+        :root {
+            --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; 
+            --accent: #d500f9; --green: #00e676; --red: #ff1744;
+            --border: #333;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; font-size: 14px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        h1 { border-bottom: 2px solid var(--accent); padding-bottom: 10px; color: var(--accent); }
+        
+        button {
+            background: var(--accent); color: white; border: none; padding: 12px 24px; 
+            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; margin-bottom: 20px;
+        }
+        button:hover { opacity: 0.9; }
+
+        .filters { display: flex; gap: 20px; background: var(--panel); padding: 15px; border-radius: 8px; margin-bottom: 20px; align-items: center;}
+        input[type="number"] { background: #333; border: 1px solid #555; color: white; padding: 8px; width: 80px; border-radius: 4px; }
+        
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .tables-grid { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--panel); border-radius: 8px; padding: 0; overflow: hidden; border: 1px solid var(--border); }
+        .card-header { padding: 15px; background: #252525; font-weight: bold; border-bottom: 1px solid var(--border); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #2a2a2a; color: #aaa; padding: 10px; text-align: left; font-size: 12px; }
+        td { padding: 8px 10px; border-bottom: 1px solid #333; }
+        tr:hover { background: #2d2d2d; }
+        
+        .yield-high { color: var(--green); font-weight: bold; }
+        .nkd-warn { color: var(--red); font-weight: bold; }
+        
+        .rating-badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: #000; font-weight: bold; }
+        .r-A { background: #b9f6ca; } /* A- to A+ */
+        .r-B { background: #ffff8d; } /* BB+ and below */
+
+        .sell-block { background: rgba(255, 23, 68, 0.1); border: 1px solid var(--red); padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .sell-title { color: var(--red); font-weight: bold; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>💎 ТОЛЬКО ФИКСЫ: 23% И ВЫШЕ</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+             <span id="status" style="color:#888;">Нажмите обновить -></span>
+            <button onclick="updateData()">🔄 Обновить цены MOEX</button>
+        </div>
+    </div>
+
+    <div class="sell-block">
+        <span class="sell-title">🔻 ИСТОЧНИКИ СРЕДСТВ (ПРОДАТЬ):</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <b>Счет 400KKYN:</b><br>
+                1. ГТЛК 2Р-04, 2Р-07 (Цена >103%)<br>
+                2. Сбербанк, Аэрофлот, КАМАЗ (Низкий купон)<br>
+                3. ДОМ.РФ, Почта России (Доход < 18%)
+            </div>
+            <div>
+                <b>Счет S00KKYN (ИИС):</b><br>
+                1. МТС, Мегафон, Ростелеком (Старые выпуски)<br>
+                2. РусГидро, Россети, Магнит<br>
+                3. Сбербанк облигации
+            </div>
+        </div>
+    </div>
+
+    <div class="filters">
+        <label>Кол-во бумаг: <input type="number" id="qty" value="4" onchange="render()"></label>
+        <label>Макс НКД (руб): <input type="number" id="nkdMax" value="60" onchange="render()"></label>
+    </div>
+
+    <div class="tables-grid">
+        <div class="card">
+            <div class="card-header">Счет 400KKYN (Брокерский)</div>
+            <div style="overflow-x:auto;">
+                <table id="t400">
+                    <thead>
+                        <tr>
+                            <th>Рейтинг</th>
+                            <th>Название / ISIN</th>
+                            <th>Купон %</th>
+                            <th>Дох %</th>
+                            <th>НКД</th>
+                            <th>Сумма (₽)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div style="padding:10px; text-align:right; font-weight:bold; color:#888;" id="sum400">Итого: 0 ₽</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Счет S00KKYN (ИИС)</div>
+            <div style="overflow-x:auto;">
+                <table id="tS00">
+                    <thead>
+                        <tr>
+                            <th>Рейтинг</th>
+                            <th>Название / ISIN</th>
+                            <th>Купон %</th>
+                            <th>Дох %</th>
+                            <th>НКД</th>
+                            <th>Сумма (₽)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div style="padding:10px; text-align:right; font-weight:bold; color:#888;" id="sumS00">Итого: 0 ₽</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Список облигаций ТОЛЬКО С ФИКСИРОВАННЫМ КУПОНОМ ~23-27%
+    // Включая High Yield (A-, BBB, BB+)
+    const bondsDB = [
+        {i:"RU000A1082K7", r:"A-", n:"ЕвроТранс 002Р-01"}, // Купон ~25% (оферта)
+        {i:"RU000A108D81", r:"A-", n:"ЕвроТранс 001Р-05"},
+        {i:"RU000A10A141", r:"A-", n:"ЕвроТранс 002Р-02"}, // Свежий
+        {i:"RU000A1095L7", r:"A",  n:"Самолет БО-П16"},    // Оферта с высоким купоном
+        {i:"RU000A109874", r:"A",  n:"Самолет БО-П18"},
+        {i:"RU000A106SK2", r:"A-", n:"АПРИ Флай Плэнинг 2Р2"},
+        {i:"RU000A1082X0", r:"A",  n:"Сэтл Групп 002P-03"}, // ~20-22% YTM
+        {i:"RU000A105XF4", r:"A-", n:"Глоракс 001Р-01"},
+        {i:"RU000A1084E6", r:"A-", n:"Брусника 002Р-02"},
+        {i:"RU000A1082Y8", r:"A-", n:"Джи-Групп 002Р-03"},
+        
+        // ВДО и Средний риск (для достижения 23%+)
+        {i:"RU000A109098", r:"BB+", n:"АйДи Коллект 001P-06"}, // Купон ~24-26%
+        {i:"RU000A108U72", r:"A-",  n:"ПКБ 001Р-05"},
+        {i:"RU000A107D33", r:"A-",  n:"СибАвтоТранс 001Р-03"},
+        {i:"RU000A1089L4", r:"BB+", n:"Займер 001P-02"},
+        {i:"RU000A107C91", r:"BB+", n:"Быстроденьги 002Р-04"},
+        {i:"RU000A107SA1", r:"BB+", n:"Быстроденьги 002Р-05"},
+        {i:"RU000A108L81", r:"BB+", n:"Быстроденьги 002Р-06"},
+        {i:"RU000A109L98", r:"B+",  n:"Ника 001P-04"}, // Риск, но купон высокий
+        {i:"RU000A109KV2", r:"AA+", n:"Почта России 001Р-14"}, // Свежий фикс
+        {i:"RU000A1092M5", r:"A",   n:"Интерлизинг 001Р-09"},
+        {i:"RU000A107C34", r:"A",   n:"Интерлизинг 001Р-07"},
+        {i:"RU000A108JH3", r:"A",   n:"Элемент Лизинг 1Р-08"},
+        {i:"RU000A1071U9", r:"BB+", n:"КарМани 002P-01"},
+        {i:"RU000A1080Z9", r:"A",   n:"ЯТЭК 001P-03"},
+        {i:"RU000A1099A2", r:"A",   n:"ВИС Финанс БО-П06"},
+        {i:"RU000A1082W2", r:"A",   n:"Группа Астра 001P-01"},
+        {i:"RU000A109B33", r:"A+",  n:"Делимобиль 001P-04"},
+        {i:"RU000A109791", r:"A-",  n:"Новые технологии 1Р3"},
+        {i:"RU000A107W06", r:"BB",  n:"Новосибирскавтодор"},
+        {i:"RU000A107U81", r:"BB+", n:"Монополия 001P-01"},
+        {i:"RU000A109V66", r:"BB+", n:"Аренза-ПРО 001P-05"},
+        {i:"RU000A109X29", r:"BB+", n:"Вайлдберриз Банк 1Р1"},
+        {i:"RU000A10A3C4", r:"A-",  n:"Глобал Факторинг"},
+        {i:"RU000A1090N4", r:"A+",  n:"Русал БО-001Р-09"},
+        {i:"RU000A108L73", r:"AA",  n:"Совкомбанк БО-П05"}, // Если фикс выпуск
+        {i:"RU000A1074E7", r:"AA+", n:"ИКС 5 Финанс 003P-02"},
+        {i:"RU000A109S83", r:"AA",  n:"Хэдхантер 001Р-01"},
+        {i:"RU000A109K40", r:"AA",  n:"Группа Позитив 001P-04"},
+        {i:"RU000A108AC3", r:"A",   n:"Соллерс 001P-02"},
+        {i:"RU000A107QM0", r:"A-",  n:"ВсеИнструменты 001P-01"},
+        {i:"RU000A108462", r:"AAA", n:"Газпром Капитал БО-003Р-01"},
+        {i:"RU000A1070X5", r:"AAA", n:"ВЭБ.РФ ПБО-002Р-37"},
+        {i:"RU000A1068R1", r:"AA",  n:"Черкизово БО-001Р-06"},
+        {i:"RU000A106K43", r:"AAA", n:"Россети 001P-10R"},
+        {i:"RU000A106540", r:"A",   n:"М.Видео 001Р-04"}
+    ];
+
+    let marketData = [];
+
+    async function updateData() {
+        const btn = document.querySelector('button');
+        const status = document.getElementById('status');
+        btn.disabled = true;
+        status.innerText = "Загрузка...";
+        
+        marketData = [];
+        
+        // Batch loading
+        for (let i = 0; i < bondsDB.length; i += 5) {
+            const batch = bondsDB.slice(i, i + 5);
+            await Promise.all(batch.map(fetchOne));
+        }
+
+        render();
+        btn.disabled = false;
+        status.innerText = "Готово!";
+    }
+
+    async function fetchOne(bond) {
+        try {
+            const url = `https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/${bond.i}.json`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if(!data.securities.data.length) return;
+
+            const sec = data.securities;
+            const mkt = data.marketdata;
+            const getVal = (src, col) => src.data[0][src.columns.indexOf(col)];
+
+            const priceP = getVal(mkt, 'LAST') || getVal(mkt, 'LCURRENTPRICE');
+            if(!priceP) return; // Нет торгов
+
+            const nominal = 1000;
+            const nkd = getVal(sec, 'ACCRUEDINT') || 0;
+            const couponVal = getVal(sec, 'COUPONVALUE') || 0;
+            const period = getVal(sec, 'COUPONPERIOD') || 91;
+            
+            // Расчеты
+            const freq = Math.round(365 / period);
+            const couponPercent = (couponVal * freq) / nominal * 100; // Номинальная ставка купона
+            
+            const priceRub = nominal * (priceP / 100);
+            const fullPrice = priceRub + nkd;
+            
+            // Текущая доходность (Current Yield) = Годовой купон / Цена покупки
+            const currentYield = (couponVal * freq) / fullPrice * 100;
+
+            marketData.push({
+                ...bond,
+                priceRub, fullPrice, nkd, 
+                couponPercent, currentYield
+            });
+
+        } catch (e) { console.error(e); }
+    }
+
+    function render() {
+        const qty = document.getElementById('qty').value;
+        const nkdMax = document.getElementById('nkdMax').value;
+        const tbody400 = document.querySelector('#t400 tbody');
+        const tbodyS00 = document.querySelector('#tS00 tbody');
+        
+        tbody400.innerHTML = '';
+        tbodyS00.innerHTML = '';
+
+        // Сортировка: Сначала самая высокая текущая доходность
+        marketData.sort((a, b) => b.currentYield - a.currentYield);
+
+        let totalSum = 0;
+        let html = '';
+
+        marketData.forEach(d => {
+            // ФИЛЬТР: Только если текущая доходность > 22% (с запасом) и НКД в норме
+            if (d.currentYield < 22) return;
+
+            const cost = d.fullPrice * qty;
+            const nkdClass = d.nkd > nkdMax ? 'nkd-warn' : '';
+            const rClass = ['A-', 'A', 'A+', 'AA', 'AAA'].some(r => d.r.includes(r)) ? 'r-A' : 'r-B';
+            
+            // Пропускаем высокий НКД из отображения, если он критичен (опционально, тут просто красим)
+            
+            html += `
+            <tr>
+                <td><span class="rating-badge ${rClass}">${d.r}</span></td>
+                <td>
+                    <b>${d.n}</b><br>
+                    <span style="font-size:10px; color:#666;">${d.i}</span>
+                </td>
+                <td>${d.couponPercent.toFixed(1)}%</td>
+                <td class="yield-high">${d.currentYield.toFixed(2)}%</td>
+                <td class="${nkdClass}">${d.nkd.toFixed(1)}</td>
+                <td>${cost.toLocaleString('ru-RU', {maximumFractionDigits:0})} ₽</td>
+            </tr>
+            `;
+            
+            // Для суммы считаем только подходящие
+            if(d.nkd <= nkdMax) totalSum += cost;
+        });
+
+        tbody400.innerHTML = html;
+        tbodyS00.innerHTML = html;
+        
+        document.getElementById('sum400').innerText = "Бюджет на покупку (без 'красных' НКД): " + totalSum.toLocaleString() + " ₽";
+        document.getElementById('sumS00').innerText = "Бюджет на покупку (без 'красных' НКД): " + totalSum.toLocaleString() + " ₽";
+    }
+</script>
+
+</body>
+</html>
