@@ -3,174 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Si-3.26 Swing Monitor</title>
+    <title>Si-3.26 Direct PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: #121212;
+            --bg-color: #050505;
+            --card-bg: #141414;
             --text-main: #e0e0e0;
-            --accent-green: #00e676;
-            --accent-red: #ff1744;
-            --accent-blue: #2979ff;
+            --green: #00e676;
+            --red: #ff1744;
+            --blue: #2979ff;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 15px;
-            padding-bottom: 80px;
-            transition: opacity 0.5s;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* OLED SAVER MODE */
-        body.saver-mode > *:not(#saver-overlay) {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
+        /* OLED SAVER */
+        body.saver-mode > *:not(#saver-overlay) { opacity: 0; pointer-events: none; }
         #saver-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
         }
-        
-        body.saver-mode #saver-overlay {
-            display: flex;
-        }
+        body.saver-mode #saver-overlay { display: flex; }
 
         .status-dot {
-            width: 20px; height: 20px;
-            border-radius: 50%;
-            background: #333;
-            box-shadow: 0 0 20px #333;
-            animation: pulse 2s infinite;
+            width: 15px; height: 15px; border-radius: 50%;
+            background: #333; box-shadow: 0 0 15px #333;
+            animation: pulse 3s infinite;
         }
+        @keyframes pulse { 0% {opacity: 0.3} 50% {opacity: 1} 100% {opacity: 0.3} }
 
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.5; }
-        }
-
-        /* UI ELEMENTS */
+        /* HEADER */
         .header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: flex-end;
             margin-bottom: 20px;
         }
+        .ticker { font-size: 14px; color: #666; font-weight: bold; letter-spacing: 1px; }
+        .price { font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+        .change { font-size: 18px; font-weight: 500; margin-top: 5px; }
 
-        .price-big {
-            font-size: 42px; font-weight: bold; letter-spacing: -2px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .signal-box {
-            background: #1e1e1e;
-            border: 2px solid #333;
-            border-radius: 16px;
+        /* SIGNAL CARD */
+        .signal-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 12px;
             padding: 20px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .sig-val { font-size: 36px; font-weight: 900; margin: 10px 0; letter-spacing: 1px; }
+        .sig-reason { color: #888; font-size: 14px; min-height: 40px; }
+
+        /* CHART AREA */
+        .chart-container {
+            flex-grow: 1;
+            background: #0a0a0a;
+            border-radius: 12px;
+            position: relative;
+            min-height: 200px;
+            border: 1px solid #222;
         }
 
-        .signal-title { font-size: 12px; color: #888; letter-spacing: 2px; text-transform: uppercase; }
-        .signal-val { font-size: 48px; font-weight: 900; margin: 10px 0; }
-        .signal-reason { color: #aaa; font-size: 16px; line-height: 1.4; }
-
+        /* BOTTOM CONTROLS */
         .controls {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-top: 20px;
+            display: flex; gap: 10px; margin-top: 20px;
         }
-
         .btn {
-            background: #333; color: white; border: none;
-            padding: 15px; border-radius: 12px; font-size: 14px; font-weight: bold;
-            cursor: pointer;
+            flex: 1; padding: 15px; border: none; border-radius: 8px;
+            background: #222; color: #fff; font-weight: 600; cursor: pointer;
         }
-        
-        .btn-oled { background: #4a148c; }
-        .btn-settings { background: #424242; }
+        .btn-oled { background: #311b92; }
 
-        /* SETTINGS MODAL */
+        /* SETTINGS */
         #settings {
             display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95); z-index: 1000;
-            padding: 20px; box-sizing: border-box;
-            flex-direction: column; justify-content: center;
+            background: rgba(0,0,0,0.95); z-index: 100; padding: 30px;
         }
-        input { 
-            width: 100%; padding: 15px; margin: 10px 0; 
-            background: #222; border: 1px solid #444; color: white; 
-        }
-
+        input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box;}
     </style>
 </head>
 <body>
 
     <div id="saver-overlay" onclick="toggleSaver()">
         <div class="status-dot" id="saver-dot"></div>
-        <div style="color: #333; margin-top: 20px; font-size: 12px;">Tap to wake</div>
-        <div id="saver-price" style="color: #222; margin-top: 50px; font-size: 20px;">---</div>
+        <div id="saver-price" style="margin-top: 30px; color: #333; font-family: monospace;">---</div>
     </div>
 
     <div class="header">
         <div>
-            <div style="color:#888; font-size: 12px;">SI-3.26 (SiH6)</div>
-            <div class="price-big" id="ui-price">---</div>
-            <div id="ui-change" style="font-size: 14px;">0.00%</div>
+            <div class="ticker">Si-3.26 (SiH6)</div>
+            <div class="price" id="ui-price">---</div>
+            <div class="change" id="ui-change">0.00%</div>
         </div>
         <div style="text-align: right;">
-            <div style="font-size: 10px; color: #666;">UPDATE IN</div>
-            <div id="timer" style="font-size: 20px; font-family: monospace;">60</div>
+            <div style="color: #444; font-size: 10px;">UPD</div>
+            <div id="timer" style="color: #888; font-family: monospace; font-size: 18px;">--</div>
         </div>
     </div>
 
-    <div class="signal-box" id="signal-card">
-        <div class="signal-title">AI SWING STRATEGY</div>
-        <div class="signal-val" id="ui-signal">WAIT</div>
-        <div class="signal-reason" id="ui-reason">Загрузка данных...</div>
+    <div class="signal-card" id="card">
+        <div style="font-size: 10px; opacity: 0.5;">AI MONITOR</div>
+        <div class="sig-val" id="ui-signal">WAIT</div>
+        <div class="sig-reason" id="ui-reason">Подключение к бирже...</div>
     </div>
 
-    <div style="height: 200px; background: #111; border-radius: 12px; padding: 10px; margin-bottom: 20px;">
+    <div class="chart-container">
         <canvas id="chart"></canvas>
     </div>
 
     <div class="controls">
-        <button class="btn btn-oled" onclick="toggleSaver()">🌙 OLED SAVER</button>
-        <button class="btn btn-settings" onclick="toggleSettings()">⚙️ НАСТРОЙКИ</button>
+        <button class="btn btn-oled" onclick="toggleSaver()">🌙 OLED Mode</button>
+        <button class="btn" onclick="toggleSettings()">⚙️ API Key</button>
     </div>
 
     <div id="settings">
         <h2>Настройки</h2>
-        <p style="color: #888; font-size: 12px;">Для DeepSeek V3 нужен ключ OpenRouter</p>
-        <input type="text" id="inp-ticker" value="SiH6" placeholder="Тикер (SiH6)">
-        <input type="password" id="inp-key" placeholder="OpenRouter API Key">
-        <button class="btn" style="background: var(--accent-blue); width: 100%;" onclick="saveSettings()">СОХРАНИТЬ</button>
+        <label style="color:#888; font-size:12px;">OpenRouter / DeepSeek Key</label>
+        <input type="password" id="inp-key" placeholder="sk-or-v1-...">
+        <button class="btn" style="background: var(--blue);" onclick="saveSettings()">Сохранить</button>
+        <button class="btn" style="background: transparent; margin-top:10px;" onclick="toggleSettings()">Закрыть</button>
     </div>
 
-    <audio id="snd-alert" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.m4a"></audio>
+    <audio id="snd" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.m4a"></audio>
 
 <script>
-    // CONFIG
-    const CONF = {
-        ticker: localStorage.getItem('sw_ticker') || 'SiH6',
-        apiKey: localStorage.getItem('sw_key') || '',
-        interval: 60000 // 1 минута
+    // --- КОНФИГ ---
+    const STATE = {
+        ticker: 'SiH6', // Код фьючерса на Март 2026
+        apiKey: localStorage.getItem('my_key') || '',
+        interval: 60000, // 1 минута (стандарт для свечей)
+        prices: [],
+        lastPrice: 0
     };
 
-    let history = []; // [price, price, ...]
-    let lastSignal = "WAIT";
-    let wakeLock = null;
-
-    // CHART
+    // --- ГРАФИК ---
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
         type: 'line',
@@ -179,84 +155,103 @@
             datasets: [{
                 data: [],
                 borderColor: '#2979ff',
+                backgroundColor: 'rgba(41, 121, 255, 0.1)',
                 borderWidth: 2,
+                fill: true,
                 pointRadius: 0,
-                tension: 0.2
+                tension: 0.1
             }]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { display: false }, y: { position: 'right', grid: { color: '#222' } } },
+            scales: {
+                x: { display: false },
+                y: { position: 'right', grid: { color: '#1a1a1a' } }
+            },
             animation: false
         }
     });
 
-    // LOGIC
+    // --- ОСНОВНАЯ ФУНКЦИЯ ---
     async function tick() {
         startTimer();
-        
-        // 1. Fetch Data
+
+        // 1. Прямой запрос к MOEX (без прокси)
+        // boards/RFUD = Фьючерсы
+        const url = `https://iss.moex.com/iss/engines/futures/markets/forts/boards/RFUD/securities/${STATE.ticker}.json?iss.meta=off&iss.only=marketdata&marketdata.columns=LAST,LASTCHANGEPRCNT&_=${Date.now()}`;
+
         try {
-            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://iss.moex.com/iss/engines/futures/markets/forts/boards/RFUD/securities/${CONF.ticker}.json`)}`;
             const res = await fetch(url);
-            const data = await res.json();
+            if (!res.ok) throw new Error('MOEX 404');
+            const json = await res.json();
             
-            const row = data.marketdata.data.find(r => r[0] === CONF.ticker) || data.marketdata.data[0];
-            const price = Number(row[data.marketdata.columns.indexOf('LAST')]);
-            const change = row[data.marketdata.columns.indexOf('LASTCHANGEPRCNT')];
+            // Парсим ответ (Мосбиржа отдает массивы)
+            const data = json.marketdata.data[0];
+            if (!data) return; // Рынок закрыт или ошибка тикера
 
-            if(!price) return;
+            const price = Number(data[0]); // LAST
+            const change = Number(data[1]); // LASTCHANGEPRCNT
 
-            // 2. Update State
             updateUI(price, change);
-            history.push(price);
-            if(history.length > 100) history.shift();
-            
-            chart.data.labels = Array(history.length).fill('');
-            chart.data.datasets[0].data = history;
-            chart.update();
 
-            // 3. AI Analysis
-            if(CONF.apiKey) {
-                await askAI(price, change);
-            } else {
-                // Fallback logic
-                document.getElementById('ui-reason').innerText = "Введите API ключ для умного анализа";
+            // Сохраняем историю для графика
+            if (price !== STATE.lastPrice) {
+                STATE.prices.push(price);
+                if (STATE.prices.length > 100) STATE.prices.shift();
+                
+                chart.data.labels = new Array(STATE.prices.length).fill('');
+                chart.data.datasets[0].data = STATE.prices;
+                chart.update();
+                
+                // Если есть ключ, спрашиваем AI
+                if (STATE.apiKey) {
+                    askAI(price, change);
+                } else {
+                    simpleAlgo(price);
+                }
+                
+                STATE.lastPrice = price;
             }
 
-        } catch(e) {
+        } catch (e) {
             console.error(e);
-            document.getElementById('ui-reason').innerText = "Ошибка сети (MOEX/Proxy)";
+            document.getElementById('ui-reason').innerText = "Ошибка доступа к MOEX. Проверьте интернет.";
         }
     }
 
-    async function askAI(price, change) {
-        document.getElementById('ui-reason').innerText = "Анализ тренда...";
+    // --- ЛОГИКА СИГНАЛОВ ---
+    function simpleAlgo(price) {
+        // Простая заглушка если нет AI
+        const diff = STATE.prices.length > 1 ? price - STATE.prices[STATE.prices.length - 2] : 0;
+        let action = "HOLD";
+        let color = "#888";
         
-        // Расчет тренда по истории (простой)
-        const startPrice = history[0];
-        const trend = price > startPrice ? "UP" : "DOWN";
-        const volatility = Math.abs(price - startPrice);
+        if (diff > 20) { action = "BUY IMPULSE"; color = "var(--green)"; }
+        if (diff < -20) { action = "SELL IMPULSE"; color = "var(--red)"; }
+        
+        setSignal(action, "Технический мониторинг (введите API ключ для AI)", color);
+    }
 
+    async function askAI(price, change) {
+        document.getElementById('ui-reason').innerText = "Анализ DeepSeek...";
+        
+        // Формируем промпт
         const prompt = `
-        Role: Swing Trading Bot for USD/RUB (Si-3.26).
-        Current Price: ${price}. Daily Change: ${change}%.
-        Local Trend (last ${history.length} mins): ${trend}.
-        
-        Goal: Hold position for hours/days. Ignore minor noise.
-        Task: Return JSON {"action": "BUY"|"SELL"|"HOLD_BUY"|"HOLD_SELL"|"CLOSE", "reason": "Russian, max 6 words"}.
-        
-        Logic: 
-        - If holding BUY and trend is still UP -> HOLD_BUY.
-        - If holding SELL and trend is still DOWN -> HOLD_SELL.
-        - Only switch to CLOSE/REVERSE if trend clearly breaks.
+        Ticker: ${STATE.ticker}. Price: ${price}. Change: ${change}%.
+        History last 5 ticks: ${STATE.prices.slice(-5).join(', ')}.
+        Role: Swing Trader.
+        Task: JSON output {"action": "BUY"|"SELL"|"HOLD", "reason": "Russian, max 5 words", "risk": "Low/High"}.
+        Strategy: Look for trend reversal or continuation.
         `;
 
         try {
             const req = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${CONF.apiKey}`, "Content-Type": "application/json" },
+                headers: {
+                    "Authorization": `Bearer ${STATE.apiKey}`,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
                     model: "deepseek/deepseek-chat",
                     messages: [{role: "user", content: prompt}],
@@ -266,92 +261,79 @@
             const ans = await req.json();
             const result = JSON.parse(ans.choices[0].message.content);
             
-            setSignal(result.action, result.reason);
+            let color = "#fff";
+            if (result.action === 'BUY') color = "var(--green)";
+            if (result.action === 'SELL') color = "var(--red)";
+            
+            setSignal(result.action, result.reason, color);
 
-        } catch(e) {
-            setSignal("WAIT", "AI Error");
+        } catch (e) {
+            console.error(e);
         }
     }
 
-    function setSignal(action, reason) {
-        const elSig = document.getElementById('ui-signal');
-        const elCard = document.getElementById('signal-card');
-        const elDot = document.getElementById('saver-dot');
-
-        elSig.innerText = action;
+    function setSignal(act, reason, color) {
+        document.getElementById('ui-signal').innerText = act;
+        document.getElementById('ui-signal').style.color = color;
         document.getElementById('ui-reason').innerText = reason;
+        document.getElementById('card').style.borderColor = color;
+        
+        // OLED Dot update
+        const dot = document.getElementById('saver-dot');
+        dot.style.background = color;
+        dot.style.boxShadow = `0 0 20px ${color}`;
 
-        // Colors
-        let color = '#888';
-        if(action.includes('BUY')) color = 'var(--accent-green)';
-        if(action.includes('SELL')) color = 'var(--accent-red)';
-        if(action.includes('HOLD')) color = '#2979ff'; // Blue for Hold
-
-        elSig.style.color = color;
-        elCard.style.borderColor = color;
-        elDot.style.background = color;
-        elDot.style.boxShadow = `0 0 20px ${color}`;
-
-        // Sound Alert (Only on change)
-        if(action !== lastSignal && !action.includes('HOLD')) {
-            document.getElementById('snd-alert').play().catch(()=>{});
-            if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        // Sound if signal changed strictly
+        if (act !== 'HOLD' && !document.body.classList.contains('muted')) {
+            document.getElementById('snd').play().catch(()=>{});
         }
-        lastSignal = action;
     }
 
     function updateUI(price, change) {
-        const elPrice = document.getElementById('ui-price');
-        elPrice.innerText = price.toLocaleString();
-        elPrice.style.color = change >= 0 ? '#00e676' : '#ff1744';
-        document.getElementById('ui-change').innerText = change + "%";
+        document.getElementById('ui-price').innerText = price;
         document.getElementById('saver-price').innerText = price;
+        
+        const elCh = document.getElementById('ui-change');
+        elCh.innerText = (change > 0 ? '+' : '') + change + '%';
+        elCh.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
     }
 
-    // UTILS
+    // --- ТАЙМЕР И УТИЛИТЫ ---
     function startTimer() {
         let t = 60;
         const el = document.getElementById('timer');
-        const int = setInterval(() => {
+        clearInterval(window.timerInterval);
+        window.timerInterval = setInterval(() => {
+            el.innerText = t > 9 ? t : '0'+t;
             t--;
-            el.innerText = t;
-            if(t<=0) clearInterval(int);
+            if (t < 0) clearInterval(window.timerInterval);
         }, 1000);
     }
 
     function toggleSaver() {
         document.body.classList.toggle('saver-mode');
-        // Попытка взять Wake Lock при входе в режим сбережения
-        if(document.body.classList.contains('saver-mode')) requestWakeLock();
-    }
-
-    async function requestWakeLock() {
-        if('wakeLock' in navigator) {
-            try { wakeLock = await navigator.wakeLock.request('screen'); } 
-            catch(e) { console.log('Wake Lock fail'); }
+        // Пытаемся держать экран включенным
+        if ('wakeLock' in navigator && document.body.classList.contains('saver-mode')) {
+            navigator.wakeLock.request('screen').catch(()=>{});
         }
     }
 
-    // SETTINGS
     function toggleSettings() {
         const el = document.getElementById('settings');
-        el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-        document.getElementById('inp-key').value = CONF.apiKey;
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('inp-key').value = STATE.apiKey;
     }
 
     function saveSettings() {
-        CONF.apiKey = document.getElementById('inp-key').value;
-        CONF.ticker = document.getElementById('inp-ticker').value;
-        localStorage.setItem('sw_key', CONF.apiKey);
-        localStorage.setItem('sw_ticker', CONF.ticker);
+        STATE.apiKey = document.getElementById('inp-key').value;
+        localStorage.setItem('my_key', STATE.apiKey);
         toggleSettings();
-        tick();
+        tick(); // Сразу обновляем
     }
 
-    // INIT
-    setInterval(tick, CONF.interval);
+    // Старт
+    setInterval(tick, STATE.interval);
     tick();
-    requestWakeLock(); // Try to keep screen on immediately
 
 </script>
 </body>
