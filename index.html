@@ -2,306 +2,357 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ТЕРМИНАЛ: РЕАЛЬНАЯ ДОХОДНОСТЬ 25%+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Si-3.26 Swing Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; --red: #da3633; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; font-size: 13px; margin: 0; }
-        .container { max-width: 1800px; margin: 0 auto; }
-        
-        /* Header */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px; border-bottom: 2px solid var(--accent); margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 22px; color: var(--text); }
-        .subtitle { font-size: 12px; color: #8b949e; }
-        
-        button {
-            background: var(--accent); color: white; border: none; padding: 10px 20px; 
-            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        :root {
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --text-main: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
         }
-        button:hover { background: #2ea043; }
 
-        /* Controls */
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: var(--panel); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .c-item { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
-        input { background: #0d1117; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 15px;
+            padding-bottom: 80px;
+            transition: opacity 0.5s;
+        }
 
-        /* Main Grid */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } }
+        /* OLED SAVER MODE */
+        body.saver-mode > *:not(#saver-overlay) {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #saver-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        body.saver-mode #saver-overlay {
+            display: flex;
+        }
 
-        .panel-box { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; height: 80vh; display: flex; flex-direction: column; }
-        .panel-head { padding: 12px; background: #21262d; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-        .panel-content { overflow-y: auto; flex: 1; }
+        .status-dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #333;
+            box-shadow: 0 0 20px #333;
+            animation: pulse 2s infinite;
+        }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #161b22; color: #8b949e; padding: 10px; text-align: left; font-size: 11px; border-bottom: 1px solid var(--border); }
-        td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
-        tr:hover { background: #21262d; }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
 
-        /* Styles */
-        .r-tag { padding: 2px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; color: #000; display: inline-block; width: 30px; text-align: center; }
-        .r-A { background: #a2d2ff; }
-        .r-B { background: #ffc8dd; }
+        /* UI ELEMENTS */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
 
-        .yield-high { color: #3fb950; font-weight: bold; }
-        .yield-mid { color: #d29922; }
-        .price-disc { color: #58a6ff; font-weight: bold; }
+        .price-big {
+            font-size: 42px; font-weight: bold; letter-spacing: -2px;
+            font-variant-numeric: tabular-nums;
+        }
 
-        .loading-bar { height: 3px; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .signal-box {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .signal-title { font-size: 12px; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+        .signal-val { font-size: 48px; font-weight: 900; margin: 10px 0; }
+        .signal-reason { color: #aaa; font-size: 16px; line-height: 1.4; }
+
+        .controls {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: #333; color: white; border: none;
+            padding: 15px; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-oled { background: #4a148c; }
+        .btn-settings { background: #424242; }
+
+        /* SETTINGS MODAL */
+        #settings {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.95); z-index: 1000;
+            padding: 20px; box-sizing: border-box;
+            flex-direction: column; justify-content: center;
+        }
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; 
+            background: #222; border: 1px solid #444; color: white; 
+        }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="top-bar">
-        <div>
-            <h1>💎 BOND TERMINAL: REAL YIELD</h1>
-            <div class="subtitle" id="statusText">Нажмите ЗАГРУЗИТЬ, чтобы увидеть рынок</div>
-        </div>
-        <button onclick="startApp()" id="btnLoad">ЗАГРУЗИТЬ (MOEX)</button>
+    <div id="saver-overlay" onclick="toggleSaver()">
+        <div class="status-dot" id="saver-dot"></div>
+        <div style="color: #333; margin-top: 20px; font-size: 12px;">Tap to wake</div>
+        <div id="saver-price" style="color: #222; margin-top: 50px; font-size: 20px;">---</div>
     </div>
-    <div class="loading-bar" id="loader"></div>
+
+    <div class="header">
+        <div>
+            <div style="color:#888; font-size: 12px;">SI-3.26 (SiH6)</div>
+            <div class="price-big" id="ui-price">---</div>
+            <div id="ui-change" style="font-size: 14px;">0.00%</div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 10px; color: #666;">UPDATE IN</div>
+            <div id="timer" style="font-size: 20px; font-family: monospace;">60</div>
+        </div>
+    </div>
+
+    <div class="signal-box" id="signal-card">
+        <div class="signal-title">AI SWING STRATEGY</div>
+        <div class="signal-val" id="ui-signal">WAIT</div>
+        <div class="signal-reason" id="ui-reason">Загрузка данных...</div>
+    </div>
+
+    <div style="height: 200px; background: #111; border-radius: 12px; padding: 10px; margin-bottom: 20px;">
+        <canvas id="chart"></canvas>
+    </div>
 
     <div class="controls">
-        <div class="c-item">
-            <label>Кол-во бумаг (шт)</label>
-            <input type="number" id="qty" value="50" onchange="render()">
-        </div>
-        <div class="c-item">
-            <label>Мин. Доходность (%)</label>
-            <input type="number" id="minYield" value="23" onchange="render()">
-        </div>
-        <div class="c-item">
-            <label>Макс. НКД (₽)</label>
-            <input type="number" id="maxNKD" value="60" onchange="render()">
-        </div>
+        <button class="btn btn-oled" onclick="toggleSaver()">🌙 OLED SAVER</button>
+        <button class="btn btn-settings" onclick="toggleSettings()">⚙️ НАСТРОЙКИ</button>
     </div>
 
-    <details style="margin-bottom: 20px; background: #251818; padding: 10px; border: 1px solid #da3633; border-radius: 6px;">
-        <summary style="color: #da3633; font-weight: bold; cursor: pointer;">🔻 ОТКУДА БРАТЬ ДЕНЬГИ (Кандидаты на продажу)</summary>
-        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; color: #e0e0e0;">
-            <div>
-                <b>Счет 400KKYN:</b> ГТЛК 2Р-04/07 (дорого!), Сбербанк, Аэрофлот, КАМАЗ, Почта России.
-            </div>
-            <div>
-                <b>Счет S00KKYN:</b> МТС, Мегафон, Ростелеком, РусГидро, Магнит, Сбербанк.
-            </div>
-        </div>
-    </details>
-
-    <div class="grid">
-        <div class="panel-box">
-            <div class="panel-head">
-                <span>Счет 400KKYN (Брокерский)</span>
-                <span id="total1" style="color:var(--accent)">0 ₽</span>
-            </div>
-            <div class="panel-content">
-                <table id="t1">
-                    <thead><tr><th>Рейт</th><th>Инструмент</th><th>Цена %</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="panel-box">
-            <div class="panel-head">
-                <span>Счет S00KKYN (ИИС)</span>
-                <span id="total2" style="color:var(--accent)">0 ₽</span>
-            </div>
-            <div class="panel-content">
-                <table id="t2">
-                    <thead><tr><th>Рейт</th><th>Инструмент</th><th>Цена %</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+    <div id="settings">
+        <h2>Настройки</h2>
+        <p style="color: #888; font-size: 12px;">Для DeepSeek V3 нужен ключ OpenRouter</p>
+        <input type="text" id="inp-ticker" value="SiH6" placeholder="Тикер (SiH6)">
+        <input type="password" id="inp-key" placeholder="OpenRouter API Key">
+        <button class="btn" style="background: var(--accent-blue); width: 100%;" onclick="saveSettings()">СОХРАНИТЬ</button>
     </div>
-</div>
+
+    <audio id="snd-alert" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.m4a"></audio>
 
 <script>
-    // СПИСОК 65+ Инструментов (Оптимизирован под Real Yield > 20%)
-    // Сюда включены бумаги, которые могут торговаться с дисконтом
-    const bondsList = [
-        // Девелоперы (A/A-)
-        {i:"RU000A1095L7",r:"A",n:"Самолет П16"}, {i:"RU000A109874",r:"A",n:"Самолет П18"},
-        {i:"RU000A104JQ3",r:"A",n:"Самолет П11"}, {i:"RU000A107RZ0",r:"A",n:"Самолет П13"},
-        {i:"RU000A109TQ6",r:"A",n:"Самолет П19"}, {i:"RU000A1084E6",r:"A-",n:"Брусника 2Р2"},
-        {i:"RU000A103WD6",r:"A-",n:"Брусника 2Р1"}, {i:"RU000A102Y58",r:"A-",n:"Брусника 1Р2"},
-        {i:"RU000A1082X0",r:"A",n:"Сэтл Групп 2P3"}, {i:"RU000A105XF4",r:"A-",n:"Глоракс 1Р1"},
-        {i:"RU000A1053W3",r:"A-",n:"Глоракс 1Р1-2"}, {i:"RU000A1082Y8",r:"A-",n:"Джи-Групп 2Р3"},
-        {i:"RU000A106Z38",r:"A-",n:"Джи-Групп 2Р2"}, {i:"RU000A1030X9",r:"A-",n:"Эталон 2P1"},
-        {i:"RU000A105C93",r:"A-",n:"Легенда 2Р1"}, {i:"RU000A106SK2",r:"BBB",n:"АПРИ 2Р2"},
+    // CONFIG
+    const CONF = {
+        ticker: localStorage.getItem('sw_ticker') || 'SiH6',
+        apiKey: localStorage.getItem('sw_key') || '',
+        interval: 60000 // 1 минута
+    };
 
-        // ЕвроТранс (A-)
-        {i:"RU000A1082K7",r:"A-",n:"ЕвроТранс 2Р1"}, {i:"RU000A108D81",r:"A-",n:"ЕвроТранс 1Р5"},
-        {i:"RU000A10A141",r:"A-",n:"ЕвроТранс 2Р2"}, {i:"RU000A101P92",r:"A-",n:"ЕвроТранс 1Р1"},
+    let history = []; // [price, price, ...]
+    let lastSignal = "WAIT";
+    let wakeLock = null;
 
-        // Лизинг (A/A-)
-        {i:"RU000A1092M5",r:"A",n:"Интерлизинг 1Р9"}, {i:"RU000A107C34",r:"A",n:"Интерлизинг 1Р7"},
-        {i:"RU000A108JH3",r:"A",n:"Элемент Лиз 1Р8"}, {i:"RU000A1061K1",r:"A",n:"Элемент Лиз 1Р6"},
-        {i:"RU000A107D33",r:"A-",n:"СибАвтоТранс"}, {i:"RU000A1078X8",r:"BB+",n:"Феррони БО-01"},
-        {i:"RU000A107G63",r:"BB",n:"Лизинг-Трейд 9"}, {i:"RU000A1083C2",r:"BB",n:"Лизинг-Трейд 11"},
-
-        // Ритейл и IT (A+/A/A-)
-        {i:"RU000A106540",r:"A",n:"М.Видео 1Р4"}, {i:"RU000A109B33",r:"A+",n:"Делимобиль 1Р4"},
-        {i:"RU000A106A86",r:"A+",n:"Делимобиль 1Р3"}, {i:"RU000A1082W2",r:"A",n:"Астра 1P1"},
-        {i:"RU000A107QM0",r:"A-",n:"ВсеИнструменты"}, {i:"RU000A1067T9",r:"A-",n:"ОКЕЙ 1Р5"},
-        {i:"RU000A108994",r:"A-",n:"ОКЕЙ 1Р6"}, {i:"RU000A1080N5",r:"A-",n:"Селектел 1Р4"},
-
-        // Производство (A/A+)
-        {i:"RU000A1099A2",r:"A",n:"ВИС Финанс П06"}, {i:"RU000A109791",r:"A-",n:"НовТех 1Р3"},
-        {i:"RU000A1080Z9",r:"A",n:"ЯТЭК 1P3"}, {i:"RU000A1090N4",r:"A+",n:"Русал 1Р9"},
-        {i:"RU000A108AC3",r:"A",n:"Соллерс 1P2"}, {i:"RU000A109S83",r:"AA",n:"Хэдхантер 1Р1"},
-
-        // Финансы (BB+ to A-) - Высокие ставки
-        {i:"RU000A108U72",r:"A-",n:"ПКБ 1Р5"}, {i:"RU000A10BGU1",r:"A-",n:"ПКБ 1Р7"},
-        {i:"RU000A109098",r:"BB+",n:"АйДи Коллект 06"}, {i:"RU000A107C91",r:"BB+",n:"Быстроденьги 2Р4"},
-        {i:"RU000A107SA1",r:"BB+",n:"Быстроденьги 2Р5"}, {i:"RU000A108L81",r:"BB+",n:"Быстроденьги 2Р6"},
-        {i:"RU000A1089L4",r:"BB+",n:"Займер 1P2"}, {i:"RU000A1071U9",r:"BB+",n:"КарМани 2P1"},
-        {i:"RU000A107U81",r:"BB+",n:"Монополия 1P1"}, {i:"RU000A107W06",r:"BB",n:"Новосибирскавтодор"},
-        {i:"RU000A109V66",r:"BB+",n:"Аренза-ПРО 05"}, {i:"RU000A10A3C4",r:"A-",n:"Глобал Факторинг"},
-        {i:"RU000A109X29",r:"BB+",n:"Вайлдберриз Банк"}, {i:"RU000A109L98",r:"B+",n:"Ника 1P4"},
-        {i:"RU000A108Z85",r:"BB+",n:"Саммит 1P3"}, {i:"RU000A1075E4",r:"BB-",n:"ПИР 1P5"},
-        {i:"RU000A106PW8",r:"BB",n:"АйДи Коллект 05"}, {i:"RU000A1087G4",r:"BB+",n:"КЛС-Трейд"},
-        {i:"RU000A1065Y3",r:"BB+",n:"Вектор Икс"}, {i:"RU000A1097X4",r:"B+",n:"Нафтатранс 06"},
-        {i:"RU000A1089J8",r:"B+",n:"ГТК 1P3"}, {i:"RU000A106MV2",r:"B",n:"Племзавод 1Р2"},
-        {i:"RU000A108103",r:"BB-",n:"Ульт.Онлайн 1Р2"}, {i:"RU000A107R29",r:"BB",n:"Симпл 1Р4"},
-        {i:"RU000A1079G1",r:"BBB",n:"ГК ЕКС 1Р3"}
-    ];
-
-    let marketData = [];
-
-    async function startApp() {
-        const btn = document.getElementById('btnLoad');
-        const loader = document.getElementById('loader');
-        const status = document.getElementById('statusText');
-        
-        btn.disabled = true;
-        marketData = [];
-        let loaded = 0;
-        const batchSize = 6;
-        
-        status.innerText = "Загрузка данных с Мосбиржи...";
-
-        for(let i=0; i<bondsList.length; i+=batchSize) {
-            const batch = bondsList.slice(i, i+batchSize);
-            await Promise.all(batch.map(fetchBond));
-            loaded += batch.length;
-            loader.style.width = (loaded/bondsList.length*100) + "%";
-            status.innerText = `Обработано ${loaded} из ${bondsList.length}`;
+    // CHART
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                borderColor: '#2979ff',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { position: 'right', grid: { color: '#222' } } },
+            animation: false
         }
+    });
 
-        render();
-        btn.disabled = false;
-        loader.style.width = "0%";
-        status.innerText = `Готово! Найдено ${marketData.length} бумаг`;
-    }
-
-    async function fetchBond(item) {
+    // LOGIC
+    async function tick() {
+        startTimer();
+        
+        // 1. Fetch Data
         try {
-            const url = `https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/${item.i}.json`;
+            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://iss.moex.com/iss/engines/futures/markets/forts/boards/RFUD/securities/${CONF.ticker}.json`)}`;
             const res = await fetch(url);
             const data = await res.json();
             
-            if(!data.securities.data.length) return;
+            const row = data.marketdata.data.find(r => r[0] === CONF.ticker) || data.marketdata.data[0];
+            const price = Number(row[data.marketdata.columns.indexOf('LAST')]);
+            const change = row[data.marketdata.columns.indexOf('LASTCHANGEPRCNT')];
 
-            const get = (block, name) => block.data[0][block.columns.indexOf(name)];
-            const sec = data.securities;
-            const mkt = data.marketdata;
+            if(!price) return;
 
-            // ЦЕНА: Важный момент!
-            let p = get(mkt, 'LAST') || get(mkt, 'CLOSE') || get(mkt, 'LCURRENTPRICE') || get(mkt, 'OPEN');
+            // 2. Update State
+            updateUI(price, change);
+            history.push(price);
+            if(history.length > 100) history.shift();
             
-            const nkd = get(sec, 'ACCRUEDINT') || 0;
-            const coupVal = get(sec, 'COUPONVALUE') || 0;
-            const period = get(sec, 'COUPONPERIOD') || 91;
-            const nom = 1000;
+            chart.data.labels = Array(history.length).fill('');
+            chart.data.datasets[0].data = history;
+            chart.update();
 
-            const freq = period > 0 ? Math.round(365/period) : 0;
-            const annualCoup = coupVal * freq;
-
-            // Если цены нет, считаем по номиналу, но помечаем
-            const safeP = p ? p : 100;
-            const fullP = (nom * safeP / 100) + nkd;
-            
-            // ТЕКУЩАЯ ДОХОДНОСТЬ (Купон / Цена)
-            let curYield = 0;
-            if(fullP > 0) curYield = (annualCoup / fullP) * 100;
-
-            marketData.push({
-                ...item,
-                p: safeP,
-                nkd: nkd,
-                yld: curYield,
-                fullP: fullP,
-                hasPrice: !!p
-            });
-
-        } catch(e) { console.error(e); }
-    }
-
-    function render() {
-        const qty = parseInt(document.getElementById('qty').value);
-        const minY = parseFloat(document.getElementById('minY').value);
-        const maxN = parseFloat(document.getElementById('maxNKD').value);
-
-        // Сортируем: Сначала самые доходные
-        marketData.sort((a,b) => b.yld - a.yld);
-
-        let html = '';
-        let totalSum = 0;
-
-        marketData.forEach(d => {
-            // Фильтр: Доходность не меньше minY (например 20%)
-            // Если меньше, просто не показываем или делаем серым?
-            // Вы просили "много" бумаг, поэтому покажем всё, что > 20%
-            if(d.yld < 20) return; 
-
-            const rClass = d.r.includes('A') ? 'r-A' : 'r-B';
-            
-            let yClass = 'yield-low';
-            if(d.yld >= 25) yClass = 'yield-high';
-            else if(d.yld >= 23) yClass = 'yield-mid';
-
-            const pClass = d.p < 100 ? 'price-disc' : '';
-            const nkdStyle = d.nkd > maxN ? 'color: #da3633; font-weight:bold' : '';
-
-            // Цена покупки партии
-            const cost = d.fullP * qty;
-            
-            // Суммируем в бюджет только если бумага "проходит" фильтр пользователя
-            if(d.yld >= minY && d.nkd <= maxN) {
-                totalSum += cost;
+            // 3. AI Analysis
+            if(CONF.apiKey) {
+                await askAI(price, change);
             } else {
-                // Если не проходит фильтр (например НКД высокий), делаем полупрозрачным
-                html += `<tr style="opacity:0.5">`;
+                // Fallback logic
+                document.getElementById('ui-reason').innerText = "Введите API ключ для умного анализа";
             }
 
-            if(d.yld >= minY && d.nkd <= maxN) html += `<tr>`;
-
-            html += `
-                <td><span class="r-tag ${rClass}">${d.r}</span></td>
-                <td>
-                    <b>${d.n}</b><br>
-                    <span style="color:#666; font-size:10px">${d.i}</span>
-                </td>
-                <td class="${pClass}">${d.p.toFixed(2)}%</td>
-                <td class="${yClass}">${d.yld.toFixed(2)}%</td>
-                <td style="${nkdStyle}">${d.nkd.toFixed(1)}</td>
-                <td>${cost.toLocaleString()} ₽</td>
-            </tr>`;
-        });
-
-        if(!marketData.length) html = '<tr><td colspan="6" style="text-align:center; padding:20px">Нажмите ЗАГРУЗИТЬ</td></tr>';
-
-        document.querySelector('#t1 tbody').innerHTML = html;
-        document.querySelector('#t2 tbody').innerHTML = html;
-        
-        const sumStr = totalSum.toLocaleString() + ' ₽';
-        document.getElementById('total1').innerText = sumStr;
-        document.getElementById('total2').innerText = sumStr;
+        } catch(e) {
+            console.error(e);
+            document.getElementById('ui-reason').innerText = "Ошибка сети (MOEX/Proxy)";
+        }
     }
-</script>
 
+    async function askAI(price, change) {
+        document.getElementById('ui-reason').innerText = "Анализ тренда...";
+        
+        // Расчет тренда по истории (простой)
+        const startPrice = history[0];
+        const trend = price > startPrice ? "UP" : "DOWN";
+        const volatility = Math.abs(price - startPrice);
+
+        const prompt = `
+        Role: Swing Trading Bot for USD/RUB (Si-3.26).
+        Current Price: ${price}. Daily Change: ${change}%.
+        Local Trend (last ${history.length} mins): ${trend}.
+        
+        Goal: Hold position for hours/days. Ignore minor noise.
+        Task: Return JSON {"action": "BUY"|"SELL"|"HOLD_BUY"|"HOLD_SELL"|"CLOSE", "reason": "Russian, max 6 words"}.
+        
+        Logic: 
+        - If holding BUY and trend is still UP -> HOLD_BUY.
+        - If holding SELL and trend is still DOWN -> HOLD_SELL.
+        - Only switch to CLOSE/REVERSE if trend clearly breaks.
+        `;
+
+        try {
+            const req = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${CONF.apiKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "deepseek/deepseek-chat",
+                    messages: [{role: "user", content: prompt}],
+                    response_format: { type: "json_object" }
+                })
+            });
+            const ans = await req.json();
+            const result = JSON.parse(ans.choices[0].message.content);
+            
+            setSignal(result.action, result.reason);
+
+        } catch(e) {
+            setSignal("WAIT", "AI Error");
+        }
+    }
+
+    function setSignal(action, reason) {
+        const elSig = document.getElementById('ui-signal');
+        const elCard = document.getElementById('signal-card');
+        const elDot = document.getElementById('saver-dot');
+
+        elSig.innerText = action;
+        document.getElementById('ui-reason').innerText = reason;
+
+        // Colors
+        let color = '#888';
+        if(action.includes('BUY')) color = 'var(--accent-green)';
+        if(action.includes('SELL')) color = 'var(--accent-red)';
+        if(action.includes('HOLD')) color = '#2979ff'; // Blue for Hold
+
+        elSig.style.color = color;
+        elCard.style.borderColor = color;
+        elDot.style.background = color;
+        elDot.style.boxShadow = `0 0 20px ${color}`;
+
+        // Sound Alert (Only on change)
+        if(action !== lastSignal && !action.includes('HOLD')) {
+            document.getElementById('snd-alert').play().catch(()=>{});
+            if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+        lastSignal = action;
+    }
+
+    function updateUI(price, change) {
+        const elPrice = document.getElementById('ui-price');
+        elPrice.innerText = price.toLocaleString();
+        elPrice.style.color = change >= 0 ? '#00e676' : '#ff1744';
+        document.getElementById('ui-change').innerText = change + "%";
+        document.getElementById('saver-price').innerText = price;
+    }
+
+    // UTILS
+    function startTimer() {
+        let t = 60;
+        const el = document.getElementById('timer');
+        const int = setInterval(() => {
+            t--;
+            el.innerText = t;
+            if(t<=0) clearInterval(int);
+        }, 1000);
+    }
+
+    function toggleSaver() {
+        document.body.classList.toggle('saver-mode');
+        // Попытка взять Wake Lock при входе в режим сбережения
+        if(document.body.classList.contains('saver-mode')) requestWakeLock();
+    }
+
+    async function requestWakeLock() {
+        if('wakeLock' in navigator) {
+            try { wakeLock = await navigator.wakeLock.request('screen'); } 
+            catch(e) { console.log('Wake Lock fail'); }
+        }
+    }
+
+    // SETTINGS
+    function toggleSettings() {
+        const el = document.getElementById('settings');
+        el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+        document.getElementById('inp-key').value = CONF.apiKey;
+    }
+
+    function saveSettings() {
+        CONF.apiKey = document.getElementById('inp-key').value;
+        CONF.ticker = document.getElementById('inp-ticker').value;
+        localStorage.setItem('sw_key', CONF.apiKey);
+        localStorage.setItem('sw_ticker', CONF.ticker);
+        toggleSettings();
+        tick();
+    }
+
+    // INIT
+    setInterval(tick, CONF.interval);
+    tick();
+    requestWakeLock(); // Try to keep screen on immediately
+
+</script>
 </body>
 </html>
