@@ -3,118 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Полный Список Облигаций (v4.0)</title>
+    <title>ТЕРМИНАЛ: РЕАЛЬНАЯ ДОХОДНОСТЬ 25%+</title>
     <style>
-        :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #00e676; --red: #ff5252; --gray: #424242; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; font-size: 13px; }
+        :root { --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #238636; --border: #30363d; --red: #da3633; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; font-size: 13px; margin: 0; }
         .container { max-width: 1800px; margin: 0 auto; }
         
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
-        h1 { margin: 0; font-size: 20px; color: var(--accent); }
-        .status-bar { font-family: monospace; color: #888; }
-
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px; border-bottom: 2px solid var(--accent); margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 22px; color: var(--text); }
+        .subtitle { font-size: 12px; color: #8b949e; }
+        
         button {
-            background: var(--accent); color: #000; border: none; padding: 10px 25px; 
-            border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s;
+            background: var(--accent); color: white; border: none; padding: 10px 20px; 
+            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
-        button:hover { background: #00c853; }
-        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        button:hover { background: #2ea043; }
 
         /* Controls */
-        .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #252525; padding: 10px; border-radius: 8px;}
-        .c-item { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 10px; color: #aaa; text-transform: uppercase; }
-        input { background: #121212; border: 1px solid #444; color: white; padding: 6px; border-radius: 4px; width: 80px; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: var(--panel); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .c-item { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
+        input { background: #0d1117; border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; }
 
-        /* Tables */
+        /* Main Grid */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } }
-        
-        .box { background: var(--panel); border-radius: 8px; border: 1px solid #333; display: flex; flex-direction: column; height: 80vh; }
-        .box-head { padding: 10px; background: #2a2a2a; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
-        .box-body { overflow-y: auto; flex-grow: 1; }
-        
+
+        .panel-box { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; height: 80vh; display: flex; flex-direction: column; }
+        .panel-head { padding: 12px; background: #21262d; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .panel-content { overflow-y: auto; flex: 1; }
+
         table { width: 100%; border-collapse: collapse; }
-        th { position: sticky; top: 0; background: #222; color: #888; padding: 8px; text-align: left; font-size: 11px; z-index: 10; }
-        td { padding: 6px 8px; border-bottom: 1px solid #2a2a2a; font-size: 12px; }
-        tr:hover { background: #333; }
+        th { position: sticky; top: 0; background: #161b22; color: #8b949e; padding: 10px; text-align: left; font-size: 11px; border-bottom: 1px solid var(--border); }
+        td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
+        tr:hover { background: #21262d; }
 
         /* Styles */
-        .rating { padding: 2px 4px; border-radius: 3px; font-size: 10px; font-weight: bold; color: #000; width: 25px; text-align: center; display: inline-block; }
-        .r-A { background: #b9f6ca; } 
-        .r-B { background: #ffff8d; }
-        .r-C { background: #ff8a80; }
+        .r-tag { padding: 2px 5px; border-radius: 4px; font-size: 10px; font-weight: bold; color: #000; display: inline-block; width: 30px; text-align: center; }
+        .r-A { background: #a2d2ff; }
+        .r-B { background: #ffc8dd; }
 
-        .yield-good { color: var(--accent); font-weight: bold; }
-        .yield-mid { color: #ffab00; }
-        .yield-low { color: #757575; }
-        
-        .nkd-high { color: var(--red); font-weight: bold; }
+        .yield-high { color: #3fb950; font-weight: bold; }
+        .yield-mid { color: #d29922; }
+        .price-disc { color: #58a6ff; font-weight: bold; }
 
-        .loader { height: 3px; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .loading-bar { height: 3px; background: var(--accent); width: 0%; transition: width 0.3s; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
+    <div class="top-bar">
         <div>
-            <h1>📊 BOND SCREENER v4.0 (ALL FIXES)</h1>
-            <div class="status-bar" id="statusText">Ожидание запуска...</div>
+            <h1>💎 BOND TERMINAL: REAL YIELD</h1>
+            <div class="subtitle" id="statusText">Нажмите ЗАГРУЗИТЬ, чтобы увидеть рынок</div>
         </div>
-        <button onclick="loadData()" id="btnLoad">🔄 ЗАГРУЗИТЬ ВСЕ</button>
+        <button onclick="startApp()" id="btnLoad">ЗАГРУЗИТЬ (MOEX)</button>
     </div>
-    <div class="loader" id="loader"></div>
-
-    <details style="margin-bottom: 15px; background: #2a1a1a; padding: 10px; border-radius: 6px; border: 1px solid #ff5252;">
-        <summary style="cursor: pointer; color: #ff5252; font-weight: bold;">🔻 СПИСОК НА ПРОДАЖУ (Нажмите, чтобы развернуть)</summary>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; color: #ddd;">
-            <div>
-                <b>Счет 400KKYN:</b> ГТЛК 2Р-04/07 (>103%), Сбербанк, Аэрофлот, КАМАЗ, ДОМ.РФ, Почта России.
-            </div>
-            <div>
-                <b>Счет S00KKYN (ИИС):</b> МТС, Мегафон, Ростелеком, РусГидро, Россети, Магнит, Сбербанк.
-            </div>
-        </div>
-    </details>
+    <div class="loading-bar" id="loader"></div>
 
     <div class="controls">
         <div class="c-item">
-            <label>Кол-во шт.</label>
-            <input type="number" id="qty" value="4" onchange="render()">
+            <label>Кол-во бумаг (шт)</label>
+            <input type="number" id="qty" value="50" onchange="render()">
         </div>
         <div class="c-item">
-            <label>Цель Дох. (%)</label>
-            <input type="number" id="targetY" value="23" onchange="render()">
+            <label>Мин. Доходность (%)</label>
+            <input type="number" id="minYield" value="23" onchange="render()">
         </div>
         <div class="c-item">
-            <label>Макс НКД (₽)</label>
+            <label>Макс. НКД (₽)</label>
             <input type="number" id="maxNKD" value="60" onchange="render()">
         </div>
     </div>
 
-    <div class="grid">
-        <div class="box">
-            <div class="box-head">
-                <span>Счет 400KKYN</span>
-                <span id="sum1" style="color:var(--accent)">0 ₽</span>
+    <details style="margin-bottom: 20px; background: #251818; padding: 10px; border: 1px solid #da3633; border-radius: 6px;">
+        <summary style="color: #da3633; font-weight: bold; cursor: pointer;">🔻 ОТКУДА БРАТЬ ДЕНЬГИ (Кандидаты на продажу)</summary>
+        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; color: #e0e0e0;">
+            <div>
+                <b>Счет 400KKYN:</b> ГТЛК 2Р-04/07 (дорого!), Сбербанк, Аэрофлот, КАМАЗ, Почта России.
             </div>
-            <div class="box-body">
+            <div>
+                <b>Счет S00KKYN:</b> МТС, Мегафон, Ростелеком, РусГидро, Магнит, Сбербанк.
+            </div>
+        </div>
+    </details>
+
+    <div class="grid">
+        <div class="panel-box">
+            <div class="panel-head">
+                <span>Счет 400KKYN (Брокерский)</span>
+                <span id="total1" style="color:var(--accent)">0 ₽</span>
+            </div>
+            <div class="panel-content">
                 <table id="t1">
-                    <thead><tr><th>Р</th><th>Инструмент</th><th>Купон</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
+                    <thead><tr><th>Рейт</th><th>Инструмент</th><th>Цена %</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
-        <div class="box">
-            <div class="box-head">
-                <span>Счет S00KKYN</span>
-                <span id="sum2" style="color:var(--accent)">0 ₽</span>
+        <div class="panel-box">
+            <div class="panel-head">
+                <span>Счет S00KKYN (ИИС)</span>
+                <span id="total2" style="color:var(--accent)">0 ₽</span>
             </div>
-            <div class="box-body">
+            <div class="panel-content">
                 <table id="t2">
-                    <thead><tr><th>Р</th><th>Инструмент</th><th>Купон</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
+                    <thead><tr><th>Рейт</th><th>Инструмент</th><th>Цена %</th><th>YLD%</th><th>НКД</th><th>Сумма</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -123,46 +119,59 @@
 </div>
 
 <script>
-    // 65 ISINs (FIXED COUPON Focus)
-    // A mix of A-grade (EuroTrans, Samolet) and High-Yield BB (MFO, Leasing) to ensure list is populated
-    const bondsDB = [
-        {i:"RU000A1082K7",r:"A-",n:"ЕвроТранс 2Р1"}, {i:"RU000A108D81",r:"A-",n:"ЕвроТранс 1Р5"},
-        {i:"RU000A10A141",r:"A-",n:"ЕвроТранс 2Р2"}, {i:"RU000A1095L7",r:"A",n:"Самолет БО-П16"},
-        {i:"RU000A109874",r:"A",n:"Самолет БО-П18"}, {i:"RU000A104JQ3",r:"A",n:"Самолет БО-П11"},
+    // СПИСОК 65+ Инструментов (Оптимизирован под Real Yield > 20%)
+    // Сюда включены бумаги, которые могут торговаться с дисконтом
+    const bondsList = [
+        // Девелоперы (A/A-)
+        {i:"RU000A1095L7",r:"A",n:"Самолет П16"}, {i:"RU000A109874",r:"A",n:"Самолет П18"},
+        {i:"RU000A104JQ3",r:"A",n:"Самолет П11"}, {i:"RU000A107RZ0",r:"A",n:"Самолет П13"},
+        {i:"RU000A109TQ6",r:"A",n:"Самолет П19"}, {i:"RU000A1084E6",r:"A-",n:"Брусника 2Р2"},
+        {i:"RU000A103WD6",r:"A-",n:"Брусника 2Р1"}, {i:"RU000A102Y58",r:"A-",n:"Брусника 1Р2"},
         {i:"RU000A1082X0",r:"A",n:"Сэтл Групп 2P3"}, {i:"RU000A105XF4",r:"A-",n:"Глоракс 1Р1"},
-        {i:"RU000A1084E6",r:"A-",n:"Брусника 2Р2"}, {i:"RU000A1082Y8",r:"A-",n:"Джи-Групп 2Р3"},
+        {i:"RU000A1053W3",r:"A-",n:"Глоракс 1Р1-2"}, {i:"RU000A1082Y8",r:"A-",n:"Джи-Групп 2Р3"},
+        {i:"RU000A106Z38",r:"A-",n:"Джи-Групп 2Р2"}, {i:"RU000A1030X9",r:"A-",n:"Эталон 2P1"},
+        {i:"RU000A105C93",r:"A-",n:"Легенда 2Р1"}, {i:"RU000A106SK2",r:"BBB",n:"АПРИ 2Р2"},
+
+        // ЕвроТранс (A-)
+        {i:"RU000A1082K7",r:"A-",n:"ЕвроТранс 2Р1"}, {i:"RU000A108D81",r:"A-",n:"ЕвроТранс 1Р5"},
+        {i:"RU000A10A141",r:"A-",n:"ЕвроТранс 2Р2"}, {i:"RU000A101P92",r:"A-",n:"ЕвроТранс 1Р1"},
+
+        // Лизинг (A/A-)
+        {i:"RU000A1092M5",r:"A",n:"Интерлизинг 1Р9"}, {i:"RU000A107C34",r:"A",n:"Интерлизинг 1Р7"},
+        {i:"RU000A108JH3",r:"A",n:"Элемент Лиз 1Р8"}, {i:"RU000A1061K1",r:"A",n:"Элемент Лиз 1Р6"},
+        {i:"RU000A107D33",r:"A-",n:"СибАвтоТранс"}, {i:"RU000A1078X8",r:"BB+",n:"Феррони БО-01"},
+        {i:"RU000A107G63",r:"BB",n:"Лизинг-Трейд 9"}, {i:"RU000A1083C2",r:"BB",n:"Лизинг-Трейд 11"},
+
+        // Ритейл и IT (A+/A/A-)
         {i:"RU000A106540",r:"A",n:"М.Видео 1Р4"}, {i:"RU000A109B33",r:"A+",n:"Делимобиль 1Р4"},
-        {i:"RU000A109791",r:"A-",n:"НовТех 1Р3"}, {i:"RU000A1092M5",r:"A",n:"Интерлизинг 1Р9"},
-        {i:"RU000A107C34",r:"A",n:"Интерлизинг 1Р7"}, {i:"RU000A108JH3",r:"A",n:"Элемент Лиз 1Р8"},
-        {i:"RU000A1080Z9",r:"A",n:"ЯТЭК 1P3"}, {i:"RU000A1099A2",r:"A",n:"ВИС Финанс П06"},
-        {i:"RU000A1082W2",r:"A",n:"Астра 1P1"}, {i:"RU000A107QM0",r:"A-",n:"ВсеИнструменты"},
-        {i:"RU000A1090N4",r:"A+",n:"Русал 1Р9"}, {i:"RU000A108AC3",r:"A",n:"Соллерс 1P2"},
-        {i:"RU000A106SK2",r:"A-",n:"АПРИ 2Р2"}, {i:"RU000A107D33",r:"A-",n:"СибАвтоТранс 1Р3"},
-        {i:"RU000A108U72",r:"A-",n:"ПКБ 1Р5"}, {i:"RU000A109098",r:"BB+",n:"АйДи Коллект 06"},
-        {i:"RU000A107C91",r:"BB+",n:"Быстроденьги 2Р4"}, {i:"RU000A107SA1",r:"BB+",n:"Быстроденьги 2Р5"},
-        {i:"RU000A108L81",r:"BB+",n:"Быстроденьги 2Р6"}, {i:"RU000A1089L4",r:"BB+",n:"Займер 1P2"},
-        {i:"RU000A1071U9",r:"BB+",n:"КарМани 2P1"}, {i:"RU000A107U81",r:"BB+",n:"Монополия 1P1"},
-        {i:"RU000A107W06",r:"BB",n:"Новосибирскавтодор"}, {i:"RU000A109V66",r:"BB+",n:"Аренза-ПРО 05"},
-        {i:"RU000A10A3C4",r:"A-",n:"Глобал Факторинг"}, {i:"RU000A109X29",r:"BB+",n:"Вайлдберриз Банк"},
-        {i:"RU000A109L98",r:"B+",n:"Ника 1P4"}, {i:"RU000A108Z85",r:"BB+",n:"Саммит 1P3"},
-        {i:"RU000A1078X8",r:"BB+",n:"Феррони БО-01"}, {i:"RU000A107G63",r:"BB",n:"Лизинг-Трейд 1Р9"},
-        {i:"RU000A1083C2",r:"BB",n:"Лизинг-Трейд 1Р11"}, {i:"RU000A1075E4",r:"BB-",n:"ПИР 1P5"},
+        {i:"RU000A106A86",r:"A+",n:"Делимобиль 1Р3"}, {i:"RU000A1082W2",r:"A",n:"Астра 1P1"},
+        {i:"RU000A107QM0",r:"A-",n:"ВсеИнструменты"}, {i:"RU000A1067T9",r:"A-",n:"ОКЕЙ 1Р5"},
+        {i:"RU000A108994",r:"A-",n:"ОКЕЙ 1Р6"}, {i:"RU000A1080N5",r:"A-",n:"Селектел 1Р4"},
+
+        // Производство (A/A+)
+        {i:"RU000A1099A2",r:"A",n:"ВИС Финанс П06"}, {i:"RU000A109791",r:"A-",n:"НовТех 1Р3"},
+        {i:"RU000A1080Z9",r:"A",n:"ЯТЭК 1P3"}, {i:"RU000A1090N4",r:"A+",n:"Русал 1Р9"},
+        {i:"RU000A108AC3",r:"A",n:"Соллерс 1P2"}, {i:"RU000A109S83",r:"AA",n:"Хэдхантер 1Р1"},
+
+        // Финансы (BB+ to A-) - Высокие ставки
+        {i:"RU000A108U72",r:"A-",n:"ПКБ 1Р5"}, {i:"RU000A10BGU1",r:"A-",n:"ПКБ 1Р7"},
+        {i:"RU000A109098",r:"BB+",n:"АйДи Коллект 06"}, {i:"RU000A107C91",r:"BB+",n:"Быстроденьги 2Р4"},
+        {i:"RU000A107SA1",r:"BB+",n:"Быстроденьги 2Р5"}, {i:"RU000A108L81",r:"BB+",n:"Быстроденьги 2Р6"},
+        {i:"RU000A1089L4",r:"BB+",n:"Займер 1P2"}, {i:"RU000A1071U9",r:"BB+",n:"КарМани 2P1"},
+        {i:"RU000A107U81",r:"BB+",n:"Монополия 1P1"}, {i:"RU000A107W06",r:"BB",n:"Новосибирскавтодор"},
+        {i:"RU000A109V66",r:"BB+",n:"Аренза-ПРО 05"}, {i:"RU000A10A3C4",r:"A-",n:"Глобал Факторинг"},
+        {i:"RU000A109X29",r:"BB+",n:"Вайлдберриз Банк"}, {i:"RU000A109L98",r:"B+",n:"Ника 1P4"},
+        {i:"RU000A108Z85",r:"BB+",n:"Саммит 1P3"}, {i:"RU000A1075E4",r:"BB-",n:"ПИР 1P5"},
         {i:"RU000A106PW8",r:"BB",n:"АйДи Коллект 05"}, {i:"RU000A1087G4",r:"BB+",n:"КЛС-Трейд"},
         {i:"RU000A1065Y3",r:"BB+",n:"Вектор Икс"}, {i:"RU000A1097X4",r:"B+",n:"Нафтатранс 06"},
         {i:"RU000A1089J8",r:"B+",n:"ГТК 1P3"}, {i:"RU000A106MV2",r:"B",n:"Племзавод 1Р2"},
         {i:"RU000A108103",r:"BB-",n:"Ульт.Онлайн 1Р2"}, {i:"RU000A107R29",r:"BB",n:"Симпл 1Р4"},
-        {i:"RU000A1080N5",r:"A-",n:"Селектел 1Р4"}, {i:"RU000A1079G1",r:"BBB",n:"ГК ЕКС 1Р3"},
-        {i:"RU000A1030X9",r:"A-",n:"Эталон Фин 2P1"}, {i:"RU000A1053W3",r:"A-",n:"Глоракс 1Р1"},
-        {i:"RU000A105C93",r:"A-",n:"Легенда 2Р1"}, {i:"RU000A1067T9",r:"A-",n:"ОКЕЙ 1Р5"},
-        {i:"RU000A108994",r:"A-",n:"ОКЕЙ 1Р6"}, {i:"RU000A103WD6",r:"A-",n:"Брусника 2Р1"},
-        {i:"RU000A105TS5",r:"A+",n:"Делимобиль 1Р2"}, {i:"RU000A106A86",r:"A+",n:"Делимобиль 1Р3"},
-        {i:"RU000A107T27",r:"AA-",n:"ЮГК 1P3"}, {i:"RU000A109KV2",r:"AA+",n:"Почта России 1Р14"},
-        {i:"RU000A106HB4",r:"A-",n:"ВУШ 1P2"}
+        {i:"RU000A1079G1",r:"BBB",n:"ГК ЕКС 1Р3"}
     ];
 
     let marketData = [];
 
-    async function loadData() {
+    async function startApp() {
         const btn = document.getElementById('btnLoad');
         const loader = document.getElementById('loader');
         const status = document.getElementById('statusText');
@@ -170,135 +179,128 @@
         btn.disabled = true;
         marketData = [];
         let loaded = 0;
+        const batchSize = 6;
         
-        status.innerText = `Загрузка 0 из ${bondsDB.length}...`;
+        status.innerText = "Загрузка данных с Мосбиржи...";
 
-        // Batch requests
-        const batchSize = 5;
-        for (let i = 0; i < bondsDB.length; i += batchSize) {
-            const batch = bondsDB.slice(i, i + batchSize);
-            await Promise.all(batch.map(fetchOne));
+        for(let i=0; i<bondsList.length; i+=batchSize) {
+            const batch = bondsList.slice(i, i+batchSize);
+            await Promise.all(batch.map(fetchBond));
             loaded += batch.length;
-            
-            // Update UI
-            loader.style.width = (loaded / bondsDB.length * 100) + "%";
-            status.innerText = `Загружено ${loaded} из ${bondsDB.length}...`;
+            loader.style.width = (loaded/bondsList.length*100) + "%";
+            status.innerText = `Обработано ${loaded} из ${bondsList.length}`;
         }
 
         render();
         btn.disabled = false;
         loader.style.width = "0%";
-        status.innerText = `Готово. Показано ${marketData.length} бумаг.`;
+        status.innerText = `Готово! Найдено ${marketData.length} бумаг`;
     }
 
-    async function fetchOne(bond) {
+    async function fetchBond(item) {
         try {
-            const url = `https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/${bond.i}.json`;
+            const url = `https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQCB/securities/${item.i}.json`;
             const res = await fetch(url);
             const data = await res.json();
             
-            if(!data.securities.data.length) return; // Нет данных по бумаге
+            if(!data.securities.data.length) return;
 
-            const get = (src, col) => src.data[0][src.columns.indexOf(col)];
+            const get = (block, name) => block.data[0][block.columns.indexOf(name)];
             const sec = data.securities;
             const mkt = data.marketdata;
 
-            // ЦЕНА: Пробуем LAST, если нет -> CLOSE, если нет -> LCURRENTPRICE, если нет -> 0
-            let price = get(mkt, 'LAST');
-            if (!price) price = get(mkt, 'OPEN'); 
-            if (!price) price = get(mkt, 'LCURRENTPRICE');
-            if (!price) price = get(mkt, 'CLOSE'); 
+            // ЦЕНА: Важный момент!
+            let p = get(mkt, 'LAST') || get(mkt, 'CLOSE') || get(mkt, 'LCURRENTPRICE') || get(mkt, 'OPEN');
             
             const nkd = get(sec, 'ACCRUEDINT') || 0;
-            const couponVal = get(sec, 'COUPONVALUE') || 0;
+            const coupVal = get(sec, 'COUPONVALUE') || 0;
             const period = get(sec, 'COUPONPERIOD') || 91;
-            const nominal = 1000; 
+            const nom = 1000;
 
-            // Расчет
-            const freq = period > 0 ? Math.round(365 / period) : 0;
-            const annualCoup = couponVal * freq;
+            const freq = period > 0 ? Math.round(365/period) : 0;
+            const annualCoup = coupVal * freq;
+
+            // Если цены нет, считаем по номиналу, но помечаем
+            const safeP = p ? p : 100;
+            const fullP = (nom * safeP / 100) + nkd;
             
-            // Если цены нет вообще, ставим номинал для ориентира, но доходность будет "N/A"
-            const calcPrice = price ? price : 100; 
-            const priceRub = nominal * (calcPrice / 100);
-            const fullPrice = priceRub + nkd;
-            
-            // Доходность = (Купон в год / Полная цена) * 100
-            let yieldProc = 0;
-            if (fullPrice > 0 && price > 0) {
-                yieldProc = (annualCoup / fullPrice) * 100;
-            }
+            // ТЕКУЩАЯ ДОХОДНОСТЬ (Купон / Цена)
+            let curYield = 0;
+            if(fullP > 0) curYield = (annualCoup / fullP) * 100;
 
             marketData.push({
-                ...bond,
-                p: calcPrice,
+                ...item,
+                p: safeP,
                 nkd: nkd,
-                yld: yieldProc,
-                fullPrice: fullPrice,
-                hasPrice: price > 0
+                yld: curYield,
+                fullP: fullP,
+                hasPrice: !!p
             });
 
-        } catch (e) { console.error(e); }
+        } catch(e) { console.error(e); }
     }
 
     function render() {
-        const qty = document.getElementById('qty').value;
-        const targetY = parseFloat(document.getElementById('targetY').value);
-        const maxNKD = parseFloat(document.getElementById('maxNKD').value);
+        const qty = parseInt(document.getElementById('qty').value);
+        const minY = parseFloat(document.getElementById('minY').value);
+        const maxN = parseFloat(document.getElementById('maxNKD').value);
 
-        // Сортировка: Сначала доходность, потом рейтинг
-        marketData.sort((a, b) => b.yld - a.yld);
+        // Сортируем: Сначала самые доходные
+        marketData.sort((a,b) => b.yld - a.yld);
 
         let html = '';
         let totalSum = 0;
 
         marketData.forEach(d => {
-            // Классы стилей
-            const rClass = d.r.includes('A') ? 'r-A' : (d.r.includes('B') ? 'r-B' : 'r-C');
+            // Фильтр: Доходность не меньше minY (например 20%)
+            // Если меньше, просто не показываем или делаем серым?
+            // Вы просили "много" бумаг, поэтому покажем всё, что > 20%
+            if(d.yld < 20) return; 
+
+            const rClass = d.r.includes('A') ? 'r-A' : 'r-B';
             
             let yClass = 'yield-low';
-            if (d.yld >= targetY) yClass = 'yield-good';
-            else if (d.yld >= targetY - 3) yClass = 'yield-mid';
+            if(d.yld >= 25) yClass = 'yield-high';
+            else if(d.yld >= 23) yClass = 'yield-mid';
 
-            const nkdClass = d.nkd > maxNKD ? 'nkd-high' : '';
+            const pClass = d.p < 100 ? 'price-disc' : '';
+            const nkdStyle = d.nkd > maxN ? 'color: #da3633; font-weight:bold' : '';
+
+            // Цена покупки партии
+            const cost = d.fullP * qty;
             
-            // Если цены нет, пишем предупреждение
-            const yieldText = d.hasPrice ? d.yld.toFixed(2) + '%' : '<span style="color:#666">Нет торгов</span>';
-            
-            // Считаем сумму только если НКД в норме и доходность приемлемая (для итоговой цифры)
-            const cost = d.fullPrice * qty;
-            if (d.hasPrice && d.yld >= targetY - 5 && d.nkd <= maxNKD) {
+            // Суммируем в бюджет только если бумага "проходит" фильтр пользователя
+            if(d.yld >= minY && d.nkd <= maxN) {
                 totalSum += cost;
+            } else {
+                // Если не проходит фильтр (например НКД высокий), делаем полупрозрачным
+                html += `<tr style="opacity:0.5">`;
             }
 
+            if(d.yld >= minY && d.nkd <= maxN) html += `<tr>`;
+
             html += `
-            <tr>
-                <td><span class="rating ${rClass}">${d.r}</span></td>
+                <td><span class="r-tag ${rClass}">${d.r}</span></td>
                 <td>
                     <b>${d.n}</b><br>
                     <span style="color:#666; font-size:10px">${d.i}</span>
                 </td>
-                <td>${(d.yld * d.p / 100 * 10).toFixed(0)} ₽</td> 
-                <td class="${yClass}">${yieldText}</td>
-                <td class="${nkdClass}">${d.nkd.toFixed(1)}</td>
+                <td class="${pClass}">${d.p.toFixed(2)}%</td>
+                <td class="${yClass}">${d.yld.toFixed(2)}%</td>
+                <td style="${nkdStyle}">${d.nkd.toFixed(1)}</td>
                 <td>${cost.toLocaleString()} ₽</td>
-            </tr>
-            `;
+            </tr>`;
         });
 
-        if (marketData.length === 0) {
-            html = '<tr><td colspan="6" style="text-align:center; padding:20px">Нажмите ЗАГРУЗИТЬ ВСЕ</td></tr>';
-        }
+        if(!marketData.length) html = '<tr><td colspan="6" style="text-align:center; padding:20px">Нажмите ЗАГРУЗИТЬ</td></tr>';
 
         document.querySelector('#t1 tbody').innerHTML = html;
         document.querySelector('#t2 tbody').innerHTML = html;
         
-        document.getElementById('sum1').innerText = "Бюджет (только Топ): " + totalSum.toLocaleString() + " ₽";
-        document.getElementById('sum2').innerText = "Бюджет (только Топ): " + totalSum.toLocaleString() + " ₽";
+        const sumStr = totalSum.toLocaleString() + ' ₽';
+        document.getElementById('total1').innerText = sumStr;
+        document.getElementById('total2').innerText = sumStr;
     }
-    
-    // Auto start
-    // loadData();
 </script>
 
 </body>
